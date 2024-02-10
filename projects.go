@@ -30,13 +30,13 @@ func GetAllProjects() ([]models.Project, error) {
 		panic(err)
 	}
 	// Get a list of all projects in projects.json
-	var projectsRaw []models.Project
+	var projectsJSONRaw models.ProjectsJSON
 	defer file.Close()
-	if err := json.NewDecoder(file).Decode(&projectsRaw); err != nil {
+	if err := json.NewDecoder(file).Decode(&projectsJSONRaw); err != nil {
 		return projects, err
 	}
 	// Filter out invalid projects defined in projects.json
-	for _, p := range projectsRaw {
+	for _, p := range projectsJSONRaw.Projects {
 		if p.Validate() == nil {
 			projects = append(projects, p)
 		}

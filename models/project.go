@@ -7,7 +7,8 @@ import (
 )
 
 type Project struct {
-	Root string
+	Root  string
+	Title string
 }
 
 var (
