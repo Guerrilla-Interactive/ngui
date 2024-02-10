@@ -1,4 +1,4 @@
-module changeme
+module github.com/Guerrilla-Interactive/ngui
 
 go 1.21
 
