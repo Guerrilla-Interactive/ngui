@@ -1,10 +1,13 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/Guerrilla-Interactive/ngui/models"
 )
 
 type ProjectsJSON string
@@ -50,5 +53,21 @@ func (p ProjectsJSON) Create() error {
 		return err
 	}
 	_, err := os.Create(string(p))
+	return err
+}
+
+// Replace the current projects in the json file with the given
+// list of projects
+func (p ProjectsJSON) UpdateProjects(projects []models.Project) error {
+	file := string(p)
+	newProjectsJSON := models.ProjectsJSON{
+		Projects: projects,
+	}
+	// json.Marshal(newProjectsJSON)
+	data, err := json.MarshalIndent(newProjectsJSON, " ", " ")
+	if err != nil {
+		return err
+	}
+	err = os.WriteFile(file, data, 0o644)
 	return err
 }

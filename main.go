@@ -3,6 +3,8 @@ package main
 import (
 	"embed"
 	"fmt"
+
+	"github.com/Guerrilla-Interactive/ngui/models"
 )
 
 //go:embed all:frontend/dist
@@ -78,4 +80,8 @@ func main() {
 	// 	log.Fatal(err)
 	// }
 	fmt.Println(GetAllProjects())
+	p := models.Project{Root: "/Users/suman/Desktop/g/lunnheim-2023", Title: "lunnheim"}
+	DeleteProject(p)
+	p = models.Project{Root: "/Users/suman/Desktop/g/starter-lun", Title: "starter-lun"}
+	DeleteProject(p)
 }
