@@ -89,9 +89,12 @@ func GetAllProjects() ([]models.Project, error) {
 // 4. No other project can exist with the given ID
 // any error ecountered, nil if operation succeeds
 func AddProject(p models.Project) (models.Project, error) {
+	fmt.Println("in here!!!!", p)
 	if err := p.Validate(); err != nil {
+		fmt.Println("ohh error", err)
 		return p, err
 	}
+	fmt.Println("validated x", p)
 	if !ProjectNameRegex.Match([]byte(p.Title)) {
 		return p, ErrProjectNameInvalid
 	}
@@ -122,7 +125,9 @@ func AddProject(p models.Project) (models.Project, error) {
 			}
 		}
 	}
+	fmt.Println("projects before", projects)
 	projects = append(projects, p)
+	fmt.Println("projects after", projects)
 	projectJSONFile := GetProjectsJSONPath()
 	err = projectJSONFile.UpdateProjects(projects)
 	return p, err

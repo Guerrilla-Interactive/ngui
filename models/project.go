@@ -13,7 +13,7 @@ type Project struct {
 }
 
 var (
-	ErrProjectDoesntExist    = errors.New("project doesn't exist")
+	ErrProjectDoesntExist    = errors.New("project doesn't exist at given path")
 	ErrProjectRootIsntADir   = errors.New("project root isn't a directory")
 	ErrProjectNoPackageJSON  = errors.New("project doesn't contain package.json")
 	ErrProjectNoAppDirFound  = errors.New("cannot find app directory in the project")

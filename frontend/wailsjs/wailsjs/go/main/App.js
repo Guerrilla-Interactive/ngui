@@ -6,12 +6,20 @@ export function AddProject(arg1) {
   return window['go']['main']['App']['AddProject'](arg1);
 }
 
+export function ChooseFolder() {
+  return window['go']['main']['App']['ChooseFolder']();
+}
+
 export function DeleteProjectById(arg1) {
   return window['go']['main']['App']['DeleteProjectById'](arg1);
 }
 
 export function EditProjectTitle(arg1, arg2) {
   return window['go']['main']['App']['EditProjectTitle'](arg1, arg2);
+}
+
+export function ErrorDialog(arg1) {
+  return window['go']['main']['App']['ErrorDialog'](arg1);
 }
 
 export function GetAllProjects() {

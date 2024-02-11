@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/Guerrilla-Interactive/ngui/models"
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 // App struct
@@ -49,21 +50,13 @@ type ProjectsAndError struct {
 }
 
 // See the underlying function for docs
-func (a *App) GetAllProjects() ProjectsAndError {
-	p, e := GetAllProjects()
-	toReturn := ProjectsAndError{p, e}
-	return toReturn
-}
-
-type ProjectAndError struct {
-	Project models.Project
-	Error   error
+func (a *App) GetAllProjects() ([]models.Project, error) {
+	return GetAllProjects()
 }
 
 // See the underlying function for docs
-func (a *App) AddProject(p models.Project) ProjectAndError {
-	p, e := AddProject(p)
-	return ProjectAndError{p, e}
+func (a *App) AddProject(p models.Project) (models.Project, error) {
+	return AddProject(p)
 }
 
 // See the underlying function for docs
@@ -74,4 +67,17 @@ func (a *App) DeleteProjectById(id string) error {
 // See the underlying function for docs
 func (a *App) EditProjectTitle(id string, newTitle string) error {
 	return EditProjectTitle(id, newTitle)
+}
+
+func (a *App) ChooseFolder() (string, error) {
+	var dialogOptions runtime.OpenDialogOptions
+	dialogOptions.Title = "Choose a project directory"
+	return runtime.OpenDirectoryDialog(a.ctx, dialogOptions)
+}
+
+func (a *App) ErrorDialog(msg string) (string, error) {
+	var dialogOptions runtime.MessageDialogOptions
+	dialogOptions.Title = "Error"
+	dialogOptions.Message = msg
+	return runtime.MessageDialog(a.ctx, dialogOptions)
 }
