@@ -43,17 +43,35 @@ func (a *App) shutdown(ctx context.Context) {
 // Public App methods
 //
 
-// See the underlying function for docs
-func (a *App) GetAllProjects() ([]models.Project, error) {
-	return GetAllProjects()
+type ProjectsAndError struct {
+	Projects []models.Project
+	Error    error
 }
 
 // See the underlying function for docs
-func (a *App) AddProject(p models.Project) (models.Project, error) {
-	return AddProject(p)
+func (a *App) GetAllProjects() ProjectsAndError {
+	p, e := GetAllProjects()
+	toReturn := ProjectsAndError{p, e}
+	return toReturn
+}
+
+type ProjectAndError struct {
+	Project models.Project
+	Error   error
+}
+
+// See the underlying function for docs
+func (a *App) AddProject(p models.Project) ProjectAndError {
+	p, e := AddProject(p)
+	return ProjectAndError{p, e}
 }
 
 // See the underlying function for docs
 func (a *App) DeleteProjectById(id string) error {
 	return DeleteProjectById(id)
+}
+
+// See the underlying function for docs
+func (a *App) EditProjectTitle(id string, newTitle string) error {
+	return EditProjectTitle(id, newTitle)
 }

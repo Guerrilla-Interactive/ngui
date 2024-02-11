@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/Guerrilla-Interactive/ngui/models"
+	"golang.org/x/exp/maps"
 )
 
 // Project name regex
@@ -23,17 +24,14 @@ var ProjectNameRegex = regexp.MustCompile(`^([[:alpha:]])$|([[:alpha:]]|-)*[[:al
 
 var (
 	ErrProjectNameInvalid   = errors.New("project name is invalid")
-	ErrDuplicateProjectName = errors.New("project with give name already exists")
 	ErrDuplicateProjectPath = errors.New("project with give path already exists")
 	ErrDuplicateProjectId   = errors.New("project with give ID already exists")
 	ErrProjectNotFound      = errors.New("project with given ID not found")
 )
 
-// Returns the list of valid projects from  projects in projects.json
-// error returned is not nil if any error is encountered
-// Panics if unexpected error is encountered
-func GetAllProjects() ([]models.Project, error) {
-	var projects []models.Project
+// Returns the map from project id to project
+func GetAllProjectsMap() (map[string]models.Project, error) {
+	projects := make(map[string]models.Project)
 	projectsJSON := GetProjectsJSONPath()
 	err := projectsJSON.Validate()
 	// Create if the projects.json doesn't exist
@@ -50,17 +48,33 @@ func GetAllProjects() ([]models.Project, error) {
 	if err != nil {
 		panic(err)
 	}
+	defer file.Close()
 	// Get a list of all projects in projects.json
 	var projectsJSONRaw models.ProjectsJSON
-	defer file.Close()
 	if err := json.NewDecoder(file).Decode(&projectsJSONRaw); err != nil {
 		return projects, err
 	}
+
 	// Filter out invalid projects defined in projects.json
-	for _, p := range projectsJSONRaw.Projects {
+	for id, p := range projectsJSONRaw.Projects {
 		if p.Validate() == nil {
-			projects = append(projects, p)
+			projects[id] = p
 		}
+	}
+	return projects, nil
+}
+
+// Returns the list of valid projects from  projects in projects.json
+// error returned is not nil if any error is encountered
+// Panics if unexpected error is encountered
+func GetAllProjects() ([]models.Project, error) {
+	var projects []models.Project
+	projectsMap, err := GetAllProjectsMap()
+	if err != nil {
+		return projects, err
+	}
+	for _, p := range projectsMap {
+		projects = append(projects, p)
 	}
 	return projects, nil
 }
@@ -72,8 +86,7 @@ func GetAllProjects() ([]models.Project, error) {
 // 2. Project name must match the a particular regex
 // Returns:
 // 3. No other project with the given path can exist already
-// 4. No other project can exist with the given name
-// 5. No other project can exist with the given ID
+// 4. No other project can exist with the given ID
 // any error ecountered, nil if operation succeeds
 func AddProject(p models.Project) (models.Project, error) {
 	if err := p.Validate(); err != nil {
@@ -103,9 +116,6 @@ func AddProject(p models.Project) (models.Project, error) {
 				shouldRetry = true
 				retries++
 				break
-			}
-			if p.Title == project.Title {
-				return p, ErrDuplicateProjectName
 			}
 			if p.Root == project.Root {
 				return p, ErrDuplicateProjectPath
@@ -146,5 +156,27 @@ func DeleteProjectById(id string) error {
 	}
 	projectJSONFile := GetProjectsJSONPath()
 	err = projectJSONFile.UpdateProjects(newProjects)
+	return err
+}
+
+// Edit project title
+func EditProjectTitle(id string, newTitle string) error {
+	projects, err := GetAllProjectsMap()
+	if err != nil {
+		return err
+	}
+	// Check if project exists
+	if _, ok := projects[id]; !ok {
+		return ErrProjectNotFound
+	}
+	// Check if project name is valid
+	if !ProjectNameRegex.MatchString(newTitle) {
+		return ErrProjectNameInvalid
+	}
+	// Get the project and update title
+	p := projects[id]
+	p.Title = newTitle
+	projectJSONFile := GetProjectsJSONPath()
+	err = projectJSONFile.UpdateProjects(maps.Values(projects))
 	return err
 }

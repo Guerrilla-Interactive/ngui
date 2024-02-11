@@ -1,10 +1,10 @@
-import GetUserProjects from "@/components/dashboard/dashboard-all";
+import DisplayUserProjects from "@/components/dashboard/dashboard-all";
 
 export default function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
       <h1>Your Projects</h1>
-      <GetUserProjects />
+      <DisplayUserProjects />
     </main>
   )
 }
