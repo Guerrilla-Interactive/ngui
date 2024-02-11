@@ -60,8 +60,12 @@ func (p ProjectsJSON) Create() error {
 // list of projects
 func (p ProjectsJSON) UpdateProjects(projects []models.Project) error {
 	file := string(p)
+	projectsMap := make(map[string]models.Project)
+	for _, p := range projects {
+		projectsMap[p.Id] = p
+	}
 	newProjectsJSON := models.ProjectsJSON{
-		Projects: projects,
+		Projects: projectsMap,
 	}
 	// json.Marshal(newProjectsJSON)
 	data, err := json.MarshalIndent(newProjectsJSON, " ", " ")

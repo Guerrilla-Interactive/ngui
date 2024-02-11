@@ -3,8 +3,10 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"regexp"
+	"time"
 
 	"github.com/Guerrilla-Interactive/ngui/models"
 )
@@ -23,6 +25,8 @@ var (
 	ErrProjectNameInvalid   = errors.New("project name is invalid")
 	ErrDuplicateProjectName = errors.New("project with give name already exists")
 	ErrDuplicateProjectPath = errors.New("project with give path already exists")
+	ErrDuplicateProjectId   = errors.New("project with give ID already exists")
+	ErrProjectNotFound      = errors.New("project with given ID not found")
 )
 
 // Returns the list of valid projects from  projects in projects.json
@@ -69,44 +73,76 @@ func GetAllProjects() ([]models.Project, error) {
 // Returns:
 // 3. No other project with the given path can exist already
 // 4. No other project can exist with the given name
+// 5. No other project can exist with the given ID
 // any error ecountered, nil if operation succeeds
-func AddProject(p models.Project) error {
+func AddProject(p models.Project) (models.Project, error) {
 	if err := p.Validate(); err != nil {
-		return err
+		return p, err
 	}
 	if !ProjectNameRegex.Match([]byte(p.Title)) {
-		return ErrProjectNameInvalid
+		return p, ErrProjectNameInvalid
 	}
 	projects, err := GetAllProjects()
 	if err != nil {
-		return err
+		return p, err
 	}
-	for _, project := range projects {
-		if p.Title == project.Title {
-			return ErrDuplicateProjectName
+	// This outer loop keeps running as long as unique project id isn't found
+	shouldRetry := true
+	retries := 0
+	for shouldRetry {
+		shouldRetry = false
+		// Safeguard to prvent infinite loop
+		if retries > 2 {
+			panic("too many retries generating project id AddProject function")
 		}
-		if p.Root == project.Root {
-			return ErrDuplicateProjectPath
+		// Generate a random project ID for the project
+		projectID := GenerateProjectID()
+		p.Id = projectID
+		for _, project := range projects {
+			if p.Id == project.Id {
+				shouldRetry = true
+				retries++
+				break
+			}
+			if p.Title == project.Title {
+				return p, ErrDuplicateProjectName
+			}
+			if p.Root == project.Root {
+				return p, ErrDuplicateProjectPath
+			}
 		}
 	}
 	projects = append(projects, p)
 	projectJSONFile := GetProjectsJSONPath()
 	err = projectJSONFile.UpdateProjects(projects)
-	return err
+	return p, err
 }
 
-// Delete a project from project.json
-func DeleteProject(p models.Project) error {
+func GenerateProjectID() string {
+	num := time.Now().UnixNano()
+	if num < 0 {
+		num = num * -1
+	}
+	return fmt.Sprintf("%20d", num)
+}
+
+// Delete a project from project.json by the given project id
+func DeleteProjectById(id string) error {
 	projects, err := GetAllProjects()
 	if err != nil {
 		return err
 	}
+	found := false
 	newProjects := make([]models.Project, 0)
 	for _, project := range projects {
 		// We filter out the project that is to be deleted
-		if project != p {
+		if project.Id != id {
+			found = true
 			newProjects = append(newProjects, project)
 		}
+	}
+	if !found {
+		return ErrProjectNotFound
 	}
 	projectJSONFile := GetProjectsJSONPath()
 	err = projectJSONFile.UpdateProjects(newProjects)

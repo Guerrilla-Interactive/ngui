@@ -7,6 +7,7 @@ import (
 )
 
 type Project struct {
+	Id    string
 	Root  string
 	Title string
 }

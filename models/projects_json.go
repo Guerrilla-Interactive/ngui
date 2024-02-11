@@ -1,5 +1,5 @@
 package models
 
 type ProjectsJSON struct {
-	Projects []Project
+	Projects map[string]Project
 }

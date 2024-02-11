@@ -81,7 +81,9 @@ func main() {
 	// }
 	fmt.Println(GetAllProjects())
 	p := models.Project{Root: "/Users/suman/Desktop/g/lunnheim-2023", Title: "lunnheim"}
-	DeleteProject(p)
-	p = models.Project{Root: "/Users/suman/Desktop/g/starter-lun", Title: "starter-lun"}
-	DeleteProject(p)
+	AddProject(p)
+	fmt.Println(GetAllProjects())
+	DeleteProjectById("1")
+	// p = models.Project{Root: "/Users/suman/Desktop/g/starter-lun", Title: "starter-lun"}
+	// DeleteProject(p)
 }
