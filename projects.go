@@ -123,7 +123,7 @@ func GenerateProjectID() string {
 	if num < 0 {
 		num = num * -1
 	}
-	return fmt.Sprintf("%20d", num)
+	return fmt.Sprintf("%020d", num)
 }
 
 // Delete a project from project.json by the given project id
