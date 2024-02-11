@@ -2,7 +2,8 @@ package main
 
 import (
 	"context"
-	"fmt"
+
+	"github.com/Guerrilla-Interactive/ngui/models"
 )
 
 // App struct
@@ -38,7 +39,21 @@ func (a *App) shutdown(ctx context.Context) {
 	// Perform your teardown here
 }
 
-// Greet returns a greeting for the given name
-func (a *App) Greet(name string) string {
-	return fmt.Sprintf("Hello %s, It's show time!", name)
+//
+// Public App methods
+//
+
+// See the underlying function for docs
+func (a *App) GetAllProjects() ([]models.Project, error) {
+	return GetAllProjects()
+}
+
+// See the underlying function for docs
+func (a *App) AddProject(p models.Project) (models.Project, error) {
+	return AddProject(p)
+}
+
+// See the underlying function for docs
+func (a *App) DeleteProjectById(id string) error {
+	return DeleteProjectById(id)
 }
