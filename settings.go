@@ -53,6 +53,12 @@ func (p ProjectsJSON) Create() error {
 		return err
 	}
 	_, err := os.Create(string(p))
+	if err != nil {
+		return err
+	}
+	// Create skeleton of the JSON file
+	projects := make([]models.Project, 0)
+	err = p.UpdateProjects(projects)
 	return err
 }
 

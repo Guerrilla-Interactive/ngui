@@ -68,7 +68,7 @@ func GetAllProjectsMap() (map[string]models.Project, error) {
 // error returned is not nil if any error is encountered
 // Panics if unexpected error is encountered
 func GetAllProjects() ([]models.Project, error) {
-	var projects []models.Project
+	projects := make([]models.Project, 0)
 	projectsMap, err := GetAllProjectsMap()
 	if err != nil {
 		return projects, err

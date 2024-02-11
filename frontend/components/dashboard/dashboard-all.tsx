@@ -17,6 +17,7 @@ export default function DisplayUserProjects() {
 			setLoading(false)
 		})
 	} catch (e) {
+		setLoading(false)
 		setError(String(e))
 	}
 
@@ -46,14 +47,19 @@ function ProjectPreview(props: ProjectType) {
 	const [title, setTitle] = useState(props.Title)
 	const [changingTitle, setChangingTitle] = useState(false)
 	const titleRegex = /^([[A-Za-z])$|([[A-Za-z]|-)*[[A-Za-z]$/
-	function handleTitleChange(e: React.FormEvent) {
+	async function handleTitleChange(e: React.FormEvent) {
 		setChangingTitle(true)
 		e.preventDefault()
 		if (titleRegex.test(title)) {
 			// Send request to rename
 			try {
-				EditProjectTitle(props.Id, title).then(_ => {
-				})
+				await EditProjectTitle(props.Id, title)
+				setChangingTitle(false)
+			} catch (e) {
+				alert(`error: ${e}`)
+				setTitle(props.Title)
+				setChangingTitle(false)
+
 			}
 		} else {
 			alert("doesn't match expected pattern (must only be alphabet optionally with - in between)")
