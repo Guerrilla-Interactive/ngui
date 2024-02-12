@@ -47,7 +47,7 @@ function ProjectPreviewWrapper({ children }: { children: React.ReactElement }) {
 	)
 }
 
-export const ProjectTitleRegex = /^[[A-Za-z]]$|^([[A-Za-z])([[A-Za-z]|-)*[[A-Za-z]$/
+export const ProjectTitleRegex = /^[A-Za-z]$|^([A-Za-z])([A-Za-z]|-)*[A-Za-z]$/
 
 export function ProjectPreview(props: ProjectType) {
 	const { mutate } = useSWRConfig()
