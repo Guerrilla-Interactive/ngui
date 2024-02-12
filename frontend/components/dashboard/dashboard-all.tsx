@@ -221,7 +221,7 @@ function AddProjectDialog() {
 											</div>
 											<div className="flex gap-x-4 mt-4">
 												<button className="text-black text-xs" type="submit"> Submit </button>
-												<button className="text-black text-xs" onClick={() => setIsOpen(false)} > Close </button>
+												<button type="button" className="text-black text-xs" onClick={() => setIsOpen(false)}> Close </button>
 											</div>
 										</form>
 									</div>
