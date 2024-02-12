@@ -5,9 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 	"time"
 
+	ngo "github.com/Guerrilla-Interactive/ngo/cmd"
 	"github.com/Guerrilla-Interactive/ngui/models"
 	"golang.org/x/exp/maps"
 )
@@ -185,4 +187,48 @@ func EditProjectTitle(id string, newTitle string) error {
 	projectJSONFile := GetProjectsJSONPath()
 	err = projectJSONFile.UpdateProjects(maps.Values(projects))
 	return err
+}
+
+func GetProjectById(id string) (models.ProjectWithRoutes, error) {
+	var project models.ProjectWithRoutes
+	projects, err := GetAllProjectsMap()
+	if err != nil {
+		return project, err
+	}
+	projectWithoutRoutes, ok := projects[id]
+	project.Project = projectWithoutRoutes
+	if !ok {
+		return project, ErrProjectNotFound
+	}
+	// Find the app directory
+	var appDir string
+	appDirInfo, err := os.Stat(appDir)
+	if errors.Is(err, os.ErrNotExist) {
+		// Check if app directory is present inside the src directory level
+		appDir = filepath.Join(project.Root, "src/app")
+		appDirInfo, err = os.Stat(appDir)
+		if errors.Is(err, os.ErrNotExist) {
+			return project, models.ErrProjectNoAppDirFound
+		} else if err != nil {
+			panic(err)
+		}
+	} else if err != nil {
+		panic(err)
+	}
+	if !appDirInfo.IsDir() {
+		return project, models.ErrProjectAppDirIsntADir
+	}
+	routes := ngo.GetRoutes(appDir)
+	project.Routes = make([]models.Route, 0)
+	for _, r := range routes {
+		switch r.Kind {
+		case ngo.StaticRoute:
+			project.Routes = append(project.Routes, models.Route{PathToPage: r.PathToPage, Kind: models.StaticRoute})
+		case ngo.DynamicRoute:
+			project.Routes = append(project.Routes, models.Route{PathToPage: r.PathToPage, Kind: models.DynamicRoute})
+		default:
+			panic(fmt.Sprintf("got unexpected route %v", r.Kind))
+		}
+	}
+	return project, nil
 }

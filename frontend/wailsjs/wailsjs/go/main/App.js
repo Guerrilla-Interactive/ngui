@@ -25,3 +25,7 @@ export function ErrorDialog(arg1) {
 export function GetAllProjects() {
   return window['go']['main']['App']['GetAllProjects']();
 }
+
+export function GetProjectById(arg1) {
+  return window['go']['main']['App']['GetProjectById'](arg1);
+}

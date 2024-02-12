@@ -1,9 +1,11 @@
 "use client"
 
+import { projectIdQueryParam } from "@/app/project/utils"
 import { AllProjectsCacheKey, useProjects } from "@/fetch/projects"
 import { ProjectType } from "@/models/project"
 import { AddProject, EditProjectTitle, ChooseFolder, DeleteProjectById, ErrorDialog } from "@/wailsjs/wailsjs/go/main/App"
 import { Dialog, Transition } from '@headlessui/react'
+import Link from "next/link"
 import { Fragment, useState } from 'react'
 import { useSWRConfig } from "swr"
 
@@ -51,37 +53,15 @@ export const ProjectTitleRegex = /^[A-Za-z]$|^([A-Za-z])([A-Za-z]|-)*[A-Za-z]$/
 
 export function ProjectPreview(props: ProjectType) {
 	const { mutate } = useSWRConfig()
-	const [title, setTitle] = useState(props.Title)
-	const [changingTitle, setChangingTitle] = useState(false)
-	async function handleTitleChange(e: React.FormEvent) {
-		setChangingTitle(true)
-		e.preventDefault()
-		if (ProjectTitleRegex.test(title)) {
-			// Send request to rename
-			try {
-				await EditProjectTitle(props.Id, title)
-				// Revalidate projects
-				mutate(AllProjectsCacheKey)
-				setChangingTitle(false)
-			} catch (e) {
-				ErrorDialog(`error: ${e}`)
-				setTitle(props.Title)
-				setChangingTitle(false)
-
-			}
-		} else {
-			ErrorDialog("title doesn't match expected pattern (must only be alphabet optionally with - in between)")
-			setTitle(props.Title)
-			setChangingTitle(false)
-		}
-	}
 	return <ProjectPreviewWrapper>
 		<div className="text-xs flex flex-col justify-between h-full">
-			<form onSubmit={handleTitleChange} >
-				<label htmlFor="title">Title:</label>
-				<input id="title" className="w-1/2 border border-white bg-black text-white " value={title} onChange={e => setTitle(e.target.value)} disabled={changingTitle} />
+			<div>
+				<UpdateProjectTitle project={props} />
 				<p>Path: {props.Root}</p>
-			</form>
+			</div>
+			<Link href={`/project/?${projectIdQueryParam}=${props.Id}`}>
+				View details
+			</Link>
 			<div>
 				<button className="border border-red-800 hover:bg-red-800 text-white p-1 rounded"
 					onClick={async () => {
@@ -232,5 +212,40 @@ function AddProjectDialog() {
 				</Dialog >
 			</Transition >
 		</>
+	)
+}
+
+// This is a form component where
+export function UpdateProjectTitle({ project }: { project: ProjectType }) {
+	const [title, setTitle] = useState(project.Title)
+	const [changingTitle, setChangingTitle] = useState(false)
+	const { mutate } = useSWRConfig()
+	async function handleTitleChange(e: React.FormEvent) {
+		setChangingTitle(true)
+		e.preventDefault()
+		if (ProjectTitleRegex.test(title)) {
+			// Send request to rename
+			try {
+				await EditProjectTitle(project.Id, title)
+				// Revalidate projects
+				mutate(AllProjectsCacheKey)
+				setChangingTitle(false)
+			} catch (e) {
+				ErrorDialog(`error: ${e}`)
+				setTitle(project.Title)
+				setChangingTitle(false)
+
+			}
+		} else {
+			ErrorDialog("title doesn't match expected pattern (must only be alphabet optionally with - in between)")
+			setTitle(project.Title)
+			setChangingTitle(false)
+		}
+	}
+	return (
+		<form onSubmit={handleTitleChange} >
+			<label htmlFor="title">Title:</label>
+			<input id="title" className="w-1/2 border border-white bg-black text-white " value={title} onChange={e => setTitle(e.target.value)} disabled={changingTitle} onBlur={handleTitleChange} />
+		</form>
 	)
 }

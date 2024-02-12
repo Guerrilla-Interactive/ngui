@@ -81,3 +81,7 @@ func (a *App) ErrorDialog(msg string) (string, error) {
 	dialogOptions.Message = msg
 	return runtime.MessageDialog(a.ctx, dialogOptions)
 }
+
+func (a *App) GetProjectById(id string) (models.ProjectWithRoutes, error) {
+	return GetProjectById(id)
+}

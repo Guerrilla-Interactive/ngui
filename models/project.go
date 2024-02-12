@@ -6,6 +6,23 @@ import (
 	"path/filepath"
 )
 
+type RouteType string
+
+const (
+	StaticRoute  RouteType = "static"
+	DynamicRoute RouteType = "dynamic"
+)
+
+type Route struct {
+	PathToPage string
+	Kind       RouteType
+}
+
+type ProjectWithRoutes struct {
+	Project
+	Routes []Route
+}
+
 type Project struct {
 	Id    string
 	Root  string
