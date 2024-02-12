@@ -20,7 +20,7 @@ import (
 // matches alpha--beta-gamma
 // doesn't matche a-
 // doesn't matche alpha-
-var ProjectNameRegex = regexp.MustCompile(`^([[:alpha:]])$|([[:alpha:]]|-)*[[:alpha:]]$`)
+var ProjectNameRegex = regexp.MustCompile(`^[[:alpha:]]$|^([[:alpha:]])([[:alpha:]]|-)*[[:alpha:]]$`)
 
 var (
 	ErrProjectNameInvalid   = errors.New("project name is invalid")
