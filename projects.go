@@ -24,8 +24,8 @@ var ProjectNameRegex = regexp.MustCompile(`^[[:alpha:]]$|^([[:alpha:]])([[:alpha
 
 var (
 	ErrProjectNameInvalid   = errors.New("project name is invalid")
-	ErrDuplicateProjectPath = errors.New("project with give path already exists")
-	ErrDuplicateProjectId   = errors.New("project with give ID already exists")
+	ErrDuplicateProjectPath = errors.New("project with given path already exists")
+	ErrDuplicateProjectId   = errors.New("project with given ID already exists")
 	ErrProjectNotFound      = errors.New("project with given ID not found")
 )
 
