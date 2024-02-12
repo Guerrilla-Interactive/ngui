@@ -69,12 +69,14 @@ func (a *App) EditProjectTitle(id string, newTitle string) error {
 	return EditProjectTitle(id, newTitle)
 }
 
+// This function calls the wails function OpenDirectoryDialog
 func (a *App) ChooseFolder() (string, error) {
 	var dialogOptions runtime.OpenDialogOptions
 	dialogOptions.Title = "Choose a project directory"
 	return runtime.OpenDirectoryDialog(a.ctx, dialogOptions)
 }
 
+// This function calls the wails function MessageDialog
 func (a *App) ErrorDialog(msg string) (string, error) {
 	var dialogOptions runtime.MessageDialogOptions
 	dialogOptions.Title = "Error"
@@ -82,6 +84,7 @@ func (a *App) ErrorDialog(msg string) (string, error) {
 	return runtime.MessageDialog(a.ctx, dialogOptions)
 }
 
+// See the underlying function for docs
 func (a *App) GetProjectById(id string) (models.ProjectWithRoutes, error) {
 	return GetProjectById(id)
 }
