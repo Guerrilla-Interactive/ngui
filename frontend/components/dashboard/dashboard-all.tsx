@@ -10,7 +10,6 @@ export default function DisplayUserProjects() {
 	const [loading, setLoading] = useState(true)
 	const [error, setError] = useState("")
 	const [projects, setProjects] = useState<ProjectType[]>([])
-	console.log(Math.random())
 
 	useEffect(() => {
 		try {
@@ -73,13 +72,13 @@ export function ProjectPreview(props: ProjectType) {
 				await EditProjectTitle(props.Id, title)
 				setChangingTitle(false)
 			} catch (e) {
-				alert(`error: ${e}`)
+				ErrorDialog(`error: ${e}`)
 				setTitle(props.Title)
 				setChangingTitle(false)
 
 			}
 		} else {
-			alert("doesn't match expected pattern (must only be alphabet optionally with - in between)")
+			ErrorDialog("title doesn't match expected pattern (must only be alphabet optionally with - in between)")
 			setTitle(props.Title)
 			setChangingTitle(false)
 		}
@@ -98,7 +97,7 @@ export function ProjectPreview(props: ProjectType) {
 							await DeleteProjectById(props.Id)
 						} catch (e) {
 							// Show message dialog
-							await ErrorDialog(`error deleting project ${e}`)
+							await ErrorDialog(`error deleting project with id ${props.Id} ${e}`)
 						}
 					}}
 				>
@@ -136,8 +135,13 @@ function AddProjectDialog() {
 	async function handleSubmit(e: React.FormEvent) {
 		setSubmitting(true)
 		e.preventDefault()
+		if (!folderPath) {
+			setError(`No folder path set`)
+			setSubmitting(false)
+			return
+		}
 		if (!ProjectTitleRegex.test(title)) {
-			setError(`invalid project name ${title}`)
+			setError(`Invalid project name ${title}`)
 			setSubmitting(false)
 			return
 		}
@@ -147,8 +151,7 @@ function AddProjectDialog() {
 				Title: title,
 				Id: "" // Id will be set automatically when adding the project
 			} as ProjectType
-			const result = await AddProject(project)
-			console.log(result)
+			await AddProject(project)
 			setIsOpen(false)
 		} catch (e) {
 			setError(String(e))
@@ -198,52 +201,37 @@ function AddProjectDialog() {
 									<Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900">
 										Add a new project
 									</Dialog.Title>
-									<div className="mt-2">
+									<div className="mt-2 text-xs">
 										<p className="text-red-600 my-2">{error}</p>
 										<p className="text-red-600 my-2">{submitting ? "submitting..." : ""}</p>
 										<form onSubmit={handleSubmit}>
-											<div>
-												{folderPath ? (
-													<div>Folder: {folderPath}</div>
-												) : (
-													<div onClick={
-														async () => {
-															try {
-																const folder = await ChooseFolder()
-																setFolderPath(folder)
-															} catch (e) {
-															}
-														}}
-														className="text-black bg-white px-4 py-2"
-													>
-														<p>{folderPath ? "click to set" : "click to update"}</p>
-														Folder: {folderPath}
-													</div>)
-												}
-											</div>
+											<p onClick={
+												async () => {
+													try {
+														const folder = await ChooseFolder()
+														setFolderPath(folder)
+													} catch (e) {
+													}
+												}}
+												className="text-black bg-white"
+											>{folderPath ? `Folder: ${folderPath} - click to update` : "Folder: click to set"}
+											</p>
 											<div>
 												<label htmlFor="title" className="text-black">Title</label>
 												<input type="text" value={title} id="title" onChange={(e) => setTitle(e.target.value)} className="bg-black text-white" />
 											</div>
-											<button
-												disabled={submitting}
-												type="submit"
-												className="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-											>
-												Add
-											</button>
+											<div className="flex gap-x-4 mt-4">
+												<button className="text-black text-xs" type="submit"> Submit </button>
+												<button className="text-black text-xs"> Close </button>
+											</div>
 										</form>
-									</div>
-
-									<div className="mt-4">
-
 									</div>
 								</Dialog.Panel>
 							</Transition.Child>
 						</div>
-					</div>
-				</Dialog>
-			</Transition>
+					</div >
+				</Dialog >
+			</Transition >
 		</>
 	)
 }

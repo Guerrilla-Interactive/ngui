@@ -89,12 +89,9 @@ func GetAllProjects() ([]models.Project, error) {
 // 4. No other project can exist with the given ID
 // any error ecountered, nil if operation succeeds
 func AddProject(p models.Project) (models.Project, error) {
-	fmt.Println("in here!!!!", p)
 	if err := p.Validate(); err != nil {
-		fmt.Println("ohh error", err)
 		return p, err
 	}
-	fmt.Println("validated x", p)
 	if !ProjectNameRegex.Match([]byte(p.Title)) {
 		return p, ErrProjectNameInvalid
 	}
@@ -125,9 +122,7 @@ func AddProject(p models.Project) (models.Project, error) {
 			}
 		}
 	}
-	fmt.Println("projects before", projects)
 	projects = append(projects, p)
-	fmt.Println("projects after", projects)
 	projectJSONFile := GetProjectsJSONPath()
 	err = projectJSONFile.UpdateProjects(projects)
 	return p, err
@@ -151,8 +146,9 @@ func DeleteProjectById(id string) error {
 	newProjects := make([]models.Project, 0)
 	for _, project := range projects {
 		// We filter out the project that is to be deleted
-		if project.Id != id {
+		if project.Id == id {
 			found = true
+		} else {
 			newProjects = append(newProjects, project)
 		}
 	}
@@ -179,8 +175,13 @@ func EditProjectTitle(id string, newTitle string) error {
 		return ErrProjectNameInvalid
 	}
 	// Get the project and update title
-	p := projects[id]
+	p, ok := projects[id]
+	if !ok {
+		panic(fmt.Sprintf("cannot find project with id %v", p.Id))
+	}
 	p.Title = newTitle
+	// Note here that we must also set set projects[id] because the gets creates a new struct
+	projects[id] = p
 	projectJSONFile := GetProjectsJSONPath()
 	err = projectJSONFile.UpdateProjects(maps.Values(projects))
 	return err
