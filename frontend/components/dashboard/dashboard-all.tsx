@@ -1,29 +1,15 @@
 "use client"
 
-import { ValidatedGetAllProjects } from "@/fetch/projects"
+import { AllProjectsCacheKey, useProjects } from "@/fetch/projects"
 import { ProjectType } from "@/models/project"
 import { AddProject, EditProjectTitle, ChooseFolder, DeleteProjectById, ErrorDialog } from "@/wailsjs/wailsjs/go/main/App"
 import { Dialog, Transition } from '@headlessui/react'
-import { Fragment, useEffect, useState } from 'react'
+import { Fragment, useState } from 'react'
+import { useSWRConfig } from "swr"
+
 
 export default function DisplayUserProjects() {
-	const [loading, setLoading] = useState(true)
-	const [error, setError] = useState("")
-	const [projects, setProjects] = useState<ProjectType[]>([])
-
-	useEffect(() => {
-		try {
-			ValidatedGetAllProjects().then(x => {
-				setProjects(x)
-				setLoading(false)
-			})
-		} catch (e) {
-			setLoading(false)
-			setError(String(e))
-		}
-	}, [])
-
-	// Replace this with useSWR so that we can invalidate, reload, etc.
+	const { data: projects, isLoading, error } = useProjects()
 
 	if (error) {
 		return <div>
@@ -32,7 +18,7 @@ export default function DisplayUserProjects() {
 		</div>
 	}
 
-	if (loading) {
+	if (isLoading || !projects) {
 		return (
 			<div> Loading </div>
 		)
@@ -43,7 +29,10 @@ export default function DisplayUserProjects() {
 			<h2 className="mb-2">Projects</h2>
 			<div className="flex gap-x-12 gap-y-6 flex-wrap">
 				<AddNewProject />
-				{projects.map(x => <ProjectPreview key={x.Id} {...x} />)}
+				{projects
+					// Note that we sort the projects to prevent re-ordering when projects are reloaded   
+					.sort((a, b) => Number(a.Id) - Number(b.Id))
+					.map(x => <ProjectPreview key={x.Id} {...x} />)}
 			</div>
 		</div>
 	)
@@ -61,6 +50,7 @@ function ProjectPreviewWrapper({ children }: { children: React.ReactElement }) {
 export const ProjectTitleRegex = /^([[A-Za-z])$|([[A-Za-z]|-)*[[A-Za-z]$/
 
 export function ProjectPreview(props: ProjectType) {
+	const { mutate } = useSWRConfig()
 	const [title, setTitle] = useState(props.Title)
 	const [changingTitle, setChangingTitle] = useState(false)
 	async function handleTitleChange(e: React.FormEvent) {
@@ -70,6 +60,8 @@ export function ProjectPreview(props: ProjectType) {
 			// Send request to rename
 			try {
 				await EditProjectTitle(props.Id, title)
+				// Revalidate projects
+				mutate(AllProjectsCacheKey)
 				setChangingTitle(false)
 			} catch (e) {
 				ErrorDialog(`error: ${e}`)
@@ -95,6 +87,8 @@ export function ProjectPreview(props: ProjectType) {
 					onClick={async () => {
 						try {
 							await DeleteProjectById(props.Id)
+							// Revalidate projects
+							mutate(AllProjectsCacheKey)
 						} catch (e) {
 							// Show message dialog
 							await ErrorDialog(`error deleting project with id ${props.Id} ${e}`)
@@ -123,6 +117,7 @@ function AddProjectDialog() {
 	const [submitting, setSubmitting] = useState(false)
 	const [title, setTitle] = useState("")
 	const [error, setError] = useState("")
+	const { mutate } = useSWRConfig()
 
 	function closeModal() {
 		setIsOpen(false)
@@ -152,7 +147,11 @@ function AddProjectDialog() {
 				Id: "" // Id will be set automatically when adding the project
 			} as ProjectType
 			await AddProject(project)
+			// Revalidate projects
 			setIsOpen(false)
+			setFolderPath("")
+			setTitle("")
+			mutate(AllProjectsCacheKey)
 		} catch (e) {
 			setError(String(e))
 		}
@@ -222,7 +221,7 @@ function AddProjectDialog() {
 											</div>
 											<div className="flex gap-x-4 mt-4">
 												<button className="text-black text-xs" type="submit"> Submit </button>
-												<button className="text-black text-xs"> Close </button>
+												<button className="text-black text-xs" onClick={() => setIsOpen(false)} > Close </button>
 											</div>
 										</form>
 									</div>
