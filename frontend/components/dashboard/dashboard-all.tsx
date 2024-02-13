@@ -3,7 +3,7 @@
 import { projectIdQueryParam } from "@/app/project/utils"
 import { AllProjectsCacheKey, useProjects } from "@/fetch/projects"
 import { ProjectType } from "@/models/project"
-import { AddProject, EditProjectTitle, ChooseFolder, DeleteProjectById, ErrorDialog } from "@/wailsjs/wailsjs/go/main/App"
+import { AddProject, EditProjectTitle, ChooseFolder, DeleteProjectById, ErrorDialog, GetPathSeparator } from "@/wailsjs/wailsjs/go/main/App"
 import { Dialog, Transition } from '@headlessui/react'
 import Link from "next/link"
 import { Fragment, useState } from 'react'
@@ -108,6 +108,7 @@ function AddProjectDialog() {
 	}
 
 	async function handleSubmit(e: React.FormEvent) {
+		setError("")
 		setSubmitting(true)
 		e.preventDefault()
 		if (!folderPath) {
@@ -187,9 +188,15 @@ function AddProjectDialog() {
 											<p onClick={
 												async () => {
 													try {
+														setError("")
 														const folder = await ChooseFolder()
+														const pathSeparator = await GetPathSeparator()
 														setFolderPath(folder)
+														const folderParts = folder.split(pathSeparator)
+														const lastPart = folderParts[folderParts.length - 1]
+														setTitle(lastPart || "")
 													} catch (e) {
+														await ErrorDialog(`Error selecting project ${e}`)
 													}
 												}}
 												className="text-black bg-white"

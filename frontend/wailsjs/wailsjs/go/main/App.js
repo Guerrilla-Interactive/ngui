@@ -26,6 +26,10 @@ export function GetAllProjects() {
   return window['go']['main']['App']['GetAllProjects']();
 }
 
+export function GetPathSeparator() {
+  return window['go']['main']['App']['GetPathSeparator']();
+}
+
 export function GetProjectById(arg1) {
   return window['go']['main']['App']['GetProjectById'](arg1);
 }

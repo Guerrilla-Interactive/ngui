@@ -46,9 +46,9 @@ function ProjectSitemap({ id }: { id: string }) {
       <UpdateProjectTitle project={project} />
       <p>Id: {project.Id}</p>
       <p>Path: {project.Root}</p>
-      <pre className="mt-16">{routes.map(route => <div key={route.PathToPage}>
-        <b>{route.Kind}</b>
-        <span>{route.PathToPage}</span>
+      <pre className="mt-16">{routes.map(route => <div key={route.Name}>
+        <b>{route.Kind}:{" "}</b>
+        <span>{route.Name}</span>
       </div>)
       }</pre>
     </div>

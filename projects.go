@@ -221,11 +221,12 @@ func GetProjectById(id string) (models.ProjectWithRoutes, error) {
 	routes := ngo.GetRoutes(appDir)
 	project.Routes = make([]models.Route, 0)
 	for _, r := range routes {
+		routeName := ngo.RouteFromPagePath(r.PathToPage, appDir)
 		switch r.Kind {
 		case ngo.StaticRoute:
-			project.Routes = append(project.Routes, models.Route{PathToPage: r.PathToPage, Kind: models.StaticRoute})
+			project.Routes = append(project.Routes, models.Route{Name: routeName, Kind: models.StaticRoute})
 		case ngo.DynamicRoute:
-			project.Routes = append(project.Routes, models.Route{PathToPage: r.PathToPage, Kind: models.DynamicRoute})
+			project.Routes = append(project.Routes, models.Route{Name: routeName, Kind: models.DynamicRoute})
 		default:
 			panic(fmt.Sprintf("got unexpected route %v", r.Kind))
 		}

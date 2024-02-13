@@ -10,7 +10,7 @@ export const Projects = z.array(Project)
 
 export const Route = z.object({
 	Kind: z.string(),
-	PathToPage: z.string()
+	Name: z.string()
 })
 
 export const ProjectWithRoutes = Project.extend({

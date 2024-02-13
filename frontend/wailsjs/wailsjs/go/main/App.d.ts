@@ -14,4 +14,6 @@ export function ErrorDialog(arg1:string):Promise<string>;
 
 export function GetAllProjects():Promise<Array<models.Project>>;
 
+export function GetPathSeparator():Promise<string>;
+
 export function GetProjectById(arg1:string):Promise<models.ProjectWithRoutes>;

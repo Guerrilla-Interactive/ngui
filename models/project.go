@@ -14,8 +14,8 @@ const (
 )
 
 type Route struct {
-	PathToPage string
-	Kind       RouteType
+	Name string
+	Kind RouteType
 }
 
 type ProjectWithRoutes struct {

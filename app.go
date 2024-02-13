@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"os"
 
 	"github.com/Guerrilla-Interactive/ngui/models"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
@@ -87,4 +88,9 @@ func (a *App) ErrorDialog(msg string) (string, error) {
 // See the underlying function for docs
 func (a *App) GetProjectById(id string) (models.ProjectWithRoutes, error) {
 	return GetProjectById(id)
+}
+
+// Return the pathform specific path separator for filepath in a platform agnostic way
+func (a *App) GetPathSeparator() string {
+	return string(os.PathSeparator)
 }
