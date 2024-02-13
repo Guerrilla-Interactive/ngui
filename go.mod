@@ -7,7 +7,7 @@ toolchain go1.21.5
 // replace github.com/wailsapp/wails/v2 v2.7.1 => /Users/suman/go/pkg/mod
 
 require (
-	github.com/Guerrilla-Interactive/ngo v1.4.0
+	github.com/Guerrilla-Interactive/ngo v1.6.0
 	github.com/wailsapp/wails/v2 v2.7.1
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
 )
