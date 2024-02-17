@@ -14,7 +14,8 @@ export const Route = z.object({
 })
 
 export const ProjectWithRoutes = Project.extend({
-	Routes: z.array(Route)
+	Routes: z.array(Route),
+	PlannedRoutes: z.array(Route)
 })
 
 export type ProjectType = z.infer<typeof Project>

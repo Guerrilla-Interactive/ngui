@@ -25,10 +25,12 @@ import (
 var ProjectNameRegex = regexp.MustCompile(`^[[:alpha:]]$|^([[:alpha:]])([[:alpha:]]|-)*[[:alpha:]]$`)
 
 var (
-	ErrProjectNameInvalid   = errors.New("project name is invalid")
-	ErrDuplicateProjectPath = errors.New("project with given path already exists")
-	ErrDuplicateProjectId   = errors.New("project with given ID already exists")
-	ErrProjectNotFound      = errors.New("project with given ID not found")
+	ErrProjectNameInvalid            = errors.New("project name is invalid")
+	ErrDuplicateProjectPath          = errors.New("project with given path already exists")
+	ErrDuplicateProjectId            = errors.New("project with given ID already exists")
+	ErrProjectNotFound               = errors.New("project with given ID not found")
+	ErrRouteAlreadyExists            = errors.New("give route to add already exists")
+	ErrInvalidProjectPlannedJSONFile = errors.New("planned projects json is a directory expecting a file")
 )
 
 // Returns the map from project id to project
@@ -189,6 +191,9 @@ func EditProjectTitle(id string, newTitle string) error {
 	return err
 }
 
+// Get the project details along with the list of routes that are present in the
+// filesystem for the project. Note that we get routes by running the equivalent
+// of the `ngo ls` command on the project directory
 func GetProjectById(id string) (models.ProjectWithRoutes, error) {
 	var project models.ProjectWithRoutes
 	projects, err := GetAllProjectsMap()
@@ -231,5 +236,170 @@ func GetProjectById(id string) (models.ProjectWithRoutes, error) {
 			panic(fmt.Sprintf("got unexpected route %v", r.Kind))
 		}
 	}
+	plannedRoutes, err := GetProjectPlannedRoutes(id)
+	if err != nil {
+		return project, nil
+	}
+	project.PlannedRoutes = plannedRoutes.Routes
 	return project, nil
+}
+
+// Get the planned routes for the project with give id.
+// Note that if the project doesn't have any planned routes, this function shouldn't fail
+func GetProjectPlannedRoutes(id string) (models.ProjectPlannedRoutes, error) {
+	var r models.ProjectPlannedRoutes
+	r.ProjectID = id
+	r.Routes = make([]models.Route, 0)
+	ngoDir := NgoDir()
+	plannedProjectsJSONName := fmt.Sprintf("%v.json", id)
+	plannedProjectsJSONFile := filepath.Join(ngoDir, plannedProjectsJSONName)
+	fileInfo, err := os.Stat(plannedProjectsJSONFile)
+	// If it's a doesn't exist error, don't report the error
+	// instead return list of empty routes
+	if errors.Is(err, os.ErrNotExist) {
+		return r, nil
+	} else if err != nil {
+		panic(err)
+	}
+	// Check if file isn't a directory
+	if fileInfo.IsDir() {
+		return r, ErrInvalidProjectPlannedJSONFile
+	}
+	file, err := os.Open(plannedProjectsJSONFile)
+	if err != nil {
+		return r, err
+	}
+	defer file.Close()
+	if err := json.NewDecoder(file).Decode(&r); err != nil {
+		return r, nil
+	}
+	return r, nil
+}
+
+// Function to add a planned route
+func AddPlannedRoute(projectId string, name string) error {
+	// Optional check:
+	// Ensure that the projectId is valid
+	projects, err := GetAllProjectsMap()
+	if err != nil {
+		return err
+	}
+	if _, ok := projects[projectId]; !ok {
+		return ErrProjectNotFound
+	}
+
+	// Check if the routename is valid
+	if !IsValidRouteName(name) {
+		return ErrInvalidRouteName
+	}
+	// Create the rotue to add
+	routeToAdd := models.Route{Name: StandarizedRouteName(name), Kind: RouteType(name)}
+	plannedRoutes, err := GetProjectPlannedRoutes(projectId)
+	if err != nil {
+		return err
+	}
+	// Check if the route already exists
+	project, err := GetProjectById(projectId)
+	if err != nil {
+		return err
+	}
+	// Check if this is already an existing route
+	for _, r := range project.Routes {
+		if r.Name == routeToAdd.Name {
+			return ErrRouteAlreadyExists
+		}
+	}
+	// Check if this is already a planned route
+	for _, r := range project.PlannedRoutes {
+		if r.Name == routeToAdd.Name {
+			return ErrRouteAlreadyExists
+		}
+	}
+	plannedRoutes.Routes = append(plannedRoutes.Routes, routeToAdd)
+	// Save the route to project's planned routes
+	return SavePlannedProjects(plannedRoutes)
+}
+
+func DeletePlannedRoute(projectId string, name string) error {
+	// Optional check:
+	// Ensure that the projectId is valid
+	projects, err := GetAllProjectsMap()
+	if err != nil {
+		return err
+	}
+	if _, ok := projects[projectId]; !ok {
+		return ErrProjectNotFound
+	}
+
+	// Get current project planned routes and filter the one with the name to delete
+	projectPlannedRoutes, err := GetProjectPlannedRoutes(projectId)
+	if err != nil {
+		return err
+	}
+	newPlannedRoutes := make([]models.Route, 0)
+	// We create
+	for _, r := range projectPlannedRoutes.Routes {
+		if r.Name != name {
+			newPlannedRoutes = append(newPlannedRoutes, r)
+		}
+	}
+	projectPlannedRoutes.Routes = newPlannedRoutes
+	return SavePlannedProjects(projectPlannedRoutes)
+}
+
+// Save the project planned routes as given by the ProjectPlannedRoutes struct
+func SavePlannedProjects(p models.ProjectPlannedRoutes) error {
+	ngoDir := NgoDir()
+	plannedProjectsJSONName := fmt.Sprintf("%v.json", p.ProjectID)
+	plannedProjectsJSONFile := filepath.Join(ngoDir, plannedProjectsJSONName)
+	data, err := json.MarshalIndent(p, " ", " ")
+	if err != nil {
+		return err
+	}
+	err = os.WriteFile(plannedProjectsJSONFile, data, 0o644)
+	fmt.Println("written file", plannedProjectsJSONFile)
+	return err
+}
+
+// Creates the planned routes for the project of the given id
+// Removes the created routes from the planned routes JSON
+// Also removes the routes that already exist from from planned routes JSON
+func CreatePlannedRoutes(projectId string) error {
+	plannedRoutes, err := GetProjectPlannedRoutes(projectId)
+	newPlannedRoutes := make([]models.Route, 0)
+	if err != nil {
+		return err
+	}
+	for _, routeToCreate := range plannedRoutes.Routes {
+		// Check if the route already exists
+		p, err := GetProjectById(projectId)
+		if err != nil {
+			newPlannedRoutes = append(newPlannedRoutes, routeToCreate)
+			continue
+		}
+		// Check if the route to create already exists
+		exists := false
+		for _, candidate := range p.Routes {
+			if candidate.Name == routeToCreate.Name {
+				exists = true
+				break
+			}
+		}
+		// Neither create the route nor add it to newPlannedRoutes if it already exists
+		// Hence we do something only if the route doesn't exist
+		// That is, we try to create the route
+		if !exists {
+			err := ngo.ValidateAndRunAddCommand(routeToCreate.Name, string(routeToCreate.Kind), p.Root)
+			// This route couldn't be created so we add it to plannedRoutes based on whether the route name is valid
+			if err != nil {
+				if IsValidRouteName(routeToCreate.Name) {
+					newPlannedRoutes = append(newPlannedRoutes, routeToCreate)
+				}
+			}
+		}
+	}
+	// Updated new planned routes
+	plannedRoutes.Routes = newPlannedRoutes
+	SavePlannedProjects(plannedRoutes)
+	return nil
 }

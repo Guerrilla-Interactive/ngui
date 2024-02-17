@@ -20,7 +20,13 @@ type Route struct {
 
 type ProjectWithRoutes struct {
 	Project
-	Routes []Route
+	Routes        []Route
+	PlannedRoutes []Route
+}
+
+type ProjectPlannedRoutes struct {
+	ProjectID string
+	Routes    []Route
 }
 
 type Project struct {

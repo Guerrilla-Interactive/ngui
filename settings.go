@@ -19,14 +19,19 @@ var (
 	ErrProjectsJSONIsADirectory = errors.New("projects.json is a directory expected file")
 )
 
-// Returns the ProjectJSON path object
-// Panics if the user home directory environment variable isn't set
-func GetProjectsJSONPath() ProjectsJSON {
+// Returns the directory where ngo stores its config files
+func NgoDir() string {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		panic(err)
 	}
-	return ProjectsJSON(fmt.Sprintf("%v/.ngo/%v", homeDir, projectsJSONFileName))
+	return fmt.Sprintf("%v/.ngo/", homeDir)
+}
+
+// Returns the ProjectJSON path object
+// Panics if the user home directory environment variable isn't set
+func GetProjectsJSONPath() ProjectsJSON {
+	return ProjectsJSON(fmt.Sprintf("%v/%v", NgoDir(), projectsJSONFileName))
 }
 
 // Checks if the projects.json exists and is valid.

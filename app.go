@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	"github.com/Guerrilla-Interactive/ngui/models"
@@ -70,6 +71,46 @@ func (a *App) EditProjectTitle(id string, newTitle string) error {
 	return EditProjectTitle(id, newTitle)
 }
 
+// See the underlying function for docs
+func (a *App) GetProjectById(id string) (models.ProjectWithRoutes, error) {
+	return GetProjectById(id)
+}
+
+// Function to add the planned route, calls the underlying AddPlannedRoute
+// function. If any error occurs, presents the error in the error dialog
+func (a *App) AddPlannedRoute(projectId string, name string) error {
+	fmt.Println("got request to add", name)
+	// See the underlying function for docs
+	err := AddPlannedRoute(projectId, name)
+	if err != nil {
+		_, err := a.ErrorDialog(err.Error())
+		return err
+	}
+	return nil
+}
+
+// Function to delete the given planned route, calls the underlying DeletePlannedRoute
+// function. If any error occurs, presents the error in the error dialog
+func (a *App) DeletePlannedRoute(projectId string, name string) error {
+	// See the underlying function for docs
+	err := DeletePlannedRoute(projectId, name)
+	if err != nil {
+		_, err := a.ErrorDialog(err.Error())
+		return err
+	}
+	return nil
+}
+
+// Creates the planned routes. See the underlying CreatePlannedRoutes function for docs.
+func (a *App) CreatePlannedRoutes(projectId string) error {
+	err := CreatePlannedRoutes(projectId)
+	if err != nil {
+		_, err := a.ErrorDialog(err.Error())
+		return err
+	}
+	return nil
+}
+
 // This function calls the wails function OpenDirectoryDialog
 func (a *App) ChooseFolder() (string, error) {
 	var dialogOptions runtime.OpenDialogOptions
@@ -83,11 +124,6 @@ func (a *App) ErrorDialog(msg string) (string, error) {
 	dialogOptions.Title = "Error"
 	dialogOptions.Message = msg
 	return runtime.MessageDialog(a.ctx, dialogOptions)
-}
-
-// See the underlying function for docs
-func (a *App) GetProjectById(id string) (models.ProjectWithRoutes, error) {
-	return GetProjectById(id)
 }
 
 // Return the pathform specific path separator for filepath in a platform agnostic way
