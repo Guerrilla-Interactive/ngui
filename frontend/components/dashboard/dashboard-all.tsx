@@ -14,9 +14,9 @@ export default function DisplayUserProjects() {
 	const { data: projects, isLoading, error } = useProjects()
 
 	if (error) {
+		console.error(error)
 		return <div>
 			<p>Error loading projects</p>
-			<p>{error}</p>
 		</div>
 	}
 
